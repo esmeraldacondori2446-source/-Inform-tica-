@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>El Ahorcado: Desafío Informático</title>
+<style>
+:root{--bg:#05060f;--pn:rgba(14,18,48,.82);--tx:#e8f4ff;--mu:#8fa6d8;--a:#2b6bff;--b:#8a3ffc;--c:#5ce1ff;--ok:#3dffb0;--bad:#ff4d7d;--gold:#ffd54a;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#05060f}}
+:root[data-theme="dark"]{--bg:#05060f}
+html[data-skin="neon"]{--a:#ff2bd6;--b:#7a2cff;--c:#ffb3f0}
+html[data-skin="matrix"]{--a:#00d26a;--b:#0a7d4a;--c:#9dffc9}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;overflow:hidden}
+canvas#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.grid{position:fixed;inset:0;z-index:0;opacity:.35;background:
+ linear-gradient(var(--a) 1px,transparent 1px) 0 0/46px 46px,linear-gradient(90deg,var(--a) 1px,transparent 1px) 0 0/46px 46px;
+ mask-image:radial-gradient(circle at 50% 110%,#000,transparent 70%);-webkit-mask-image:radial-gradient(circle at 50% 110%,#000,transparent 70%)}
+.screen{position:absolute;inset:0;z-index:1;display:none;flex-direction:column;align-items:center;padding:16px;overflow-y:auto;text-align:center}
+.screen.on{display:flex}
+.c{margin:auto 0;width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;gap:14px}
+h1{font-size:clamp(30px,7vw,64px);line-height:1.02;margin:0;letter-spacing:2px;font-weight:900;text-shadow:0 0 18px var(--a),0 0 44px var(--b)}
+h1 small{display:block;font-size:.5em;color:var(--c);letter-spacing:6px}
+h2{margin:0;font-size:clamp(24px,5vw,40px);text-shadow:0 0 14px var(--a)}
+.glitch{animation:gl 4s infinite}
+@keyframes gl{0%,92%,100%{transform:none}94%{transform:translate(3px,-2px) skewX(4deg)}96%{transform:translate(-3px,1px)}}
+.btn{cursor:pointer;border:2px solid var(--c);color:#fff;background:linear-gradient(135deg,var(--a),var(--b));font:inherit;font-weight:800;padding:12px 22px;border-radius:12px;font-size:17px;box-shadow:0 0 18px var(--a);transition:transform .15s,box-shadow .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px) scale(1.04);box-shadow:0 0 32px var(--c)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.big{font-size:clamp(20px,4vw,30px);padding:18px 40px;animation:pulse 1.8s infinite}
+.btn.ghost{background:rgba(10,14,40,.8);box-shadow:none}
+@keyframes pulse{50%{box-shadow:0 0 44px var(--c),0 0 12px var(--b)}}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.pn{background:var(--pn);border:1px solid var(--a);border-radius:16px;padding:14px;backdrop-filter:blur(6px);box-shadow:0 0 22px rgba(43,107,255,.3)}
+.chip{padding:6px 12px;border-radius:99px;background:rgba(10,14,40,.85);border:1px solid var(--c);font-weight:800}
+.coin{display:inline-block;width:1.1em;height:1.1em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,var(--gold) 55%,#c98a00);vertical-align:-.15em;box-shadow:0 0 8px var(--gold)}
+.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.35);box-shadow:0 0 24px var(--gold)}}
+.top{width:100%;max-width:900px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.lv{width:min(100%,640px);display:grid;gap:12px}
+.lv .btn{display:flex;justify-content:space-between;text-align:left;align-items:center;gap:10px}
+.lv small{font-weight:400;opacity:.85}
+.bar{width:100%;max-width:900px;height:12px;border-radius:9px;background:#0b1030;border:1px solid var(--a);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--c));transition:width .5s}
+.play{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:center;width:100%;max-width:900px}
+#hang{width:min(42vw,190px);min-width:130px;filter:drop-shadow(0 0 6px var(--c))}
+#hang path,#hang circle{fill:none;stroke:var(--c);stroke-width:5;stroke-linecap:round;opacity:0;stroke-dasharray:400;stroke-dashoffset:400}
+#hang .s{opacity:1;stroke-dashoffset:0;transition:stroke-dashoffset .6s}
+#hang.dead path.p5,#hang.dead circle{stroke:var(--bad)}
+.info{flex:1;min-width:250px}
+.cat{color:var(--c);font-weight:800}
+.hint{margin:6px 0 12px;color:var(--mu);min-height:3em}
+#word{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:clamp(24px,6vw,38px);font-weight:900;min-height:56px}
+.l{width:1.15em;height:1.35em;border-bottom:4px solid var(--a);display:flex;align-items:center;justify-content:center;text-shadow:0 0 12px var(--c)}
+.l.sp{border:0;width:.6em}
+.l.pop{animation:bump .4s}
+#kb{display:grid;grid-template-columns:repeat(auto-fit,minmax(40px,1fr));gap:6px;width:100%;max-width:640px}
+#kb button{cursor:pointer;font:inherit;font-weight:800;font-size:18px;padding:9px 0;border-radius:9px;border:1px solid var(--a);background:rgba(10,14,40,.9);color:var(--tx);transition:transform .1s}
+#kb button:hover:not(:disabled){transform:scale(1.12);border-color:var(--c)}
+#kb button.ok{background:var(--ok);color:#021;border-color:var(--ok)}
+#kb button.no{background:var(--bad);color:#fff;border-color:var(--bad)}
+#kb button:disabled{cursor:not-allowed;opacity:.55}
+#kb button.out{opacity:.2}
+.hearts{font-size:22px;letter-spacing:2px}
+.shake{animation:shk .4s}
+@keyframes shk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.shop{display:grid;gap:10px;width:min(100%,680px);text-align:left}
+.it{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.it b{display:block}.it span{color:var(--mu);font-size:14px}
+.ov{position:fixed;inset:0;z-index:5;background:rgba(3,4,14,.88);display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center}
+.ov.on{display:flex}
+.fl{position:fixed;z-index:9;pointer-events:none;font-weight:900;color:var(--gold);font-size:28px;text-shadow:0 0 12px var(--gold);animation:fly 1.1s forwards}
+@keyframes fly{to{transform:translateY(-90px);opacity:0}}
+.cf{position:fixed;top:-20px;z-index:8;width:10px;height:16px;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.big-e{font-size:80px;animation:bump 1s infinite}
+.score{font-size:46px;font-weight:900;color:var(--gold);text-shadow:0 0 16px var(--gold)}
+.fl-ico{position:fixed;z-index:1;pointer-events:none;opacity:.5;animation:fl 9s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-26px) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><div class="grid"></div>
+<div class="fl-ico" style="left:6%;top:14%;font-size:44px">💾</div>
+<div class="fl-ico" style="right:7%;top:20%;font-size:40px;animation-delay:-3s">🖥️</div>
+<div class="fl-ico" style="left:10%;bottom:12%;font-size:38px;animation-delay:-5s">⌨️</div>
+<div class="fl-ico" style="right:9%;bottom:16%;font-size:42px;animation-delay:-2s">🖱️</div>
+
+<section class="screen on" id="s-home"><div class="c">
+ <div class="chip">v1.0 · Basado en Introducción a la Informática</div>
+ <h1 class="glitch">EL AHORCADO:<small>DESAFÍO INFORMÁTICO</small></h1>
+ <p style="max-width:520px;color:var(--mu)">Adivina conceptos de hardware, software y archivos. Gana monedas, compra ayudas y supera cuatro niveles.</p>
+ <button class="btn big" id="b-start">COMENZAR A JUGAR</button>
+ <div class="row"><button class="btn ghost" id="b-shop0">🛒 Tienda</button><span class="chip"><i class="coin"></i> <span class="coins">0</span></span><span class="chip">🏆 Récord <span id="best">0</span></span></div>
+</div></section>
+
+<section class="screen" id="s-levels"><div class="c">
+ <h2>Elige tu nivel</h2>
+ <div class="lv" id="lv"></div>
+ <button class="btn ghost" data-go="home">⬅ Volver</button>
+</div></section>
+
+<section class="screen" id="s-game">
+ <div class="top">
+  <span class="chip" id="lvname">Nivel</span>
+  <span class="chip">✅ <span id="ok">0</span>/6</span>
+  <span class="chip">❌ <span id="errs">0</span></span>
+  <span class="chip" id="coinchip"><i class="coin"></i> <span class="coins">0</span></span>
+  <span class="chip hearts" id="hearts"></span>
+ </div>
+ <div class="bar" style="margin:8px 0"><i id="prog"></i></div>
+ <div class="c" style="gap:12px">
+  <div class="play">
+   <svg id="hang" viewBox="0 0 200 240">
+    <path class="p1" d="M30 225H130M60 225V20H140V45"/>
+    <circle class="p2" cx="140" cy="66" r="21"/>
+    <path class="p3" d="M140 87V150"/>
+    <path class="p4" d="M140 102L110 132M140 102L170 132"/>
+    <path class="p5" d="M140 150L115 196M140 150L165 196"/>
+   </svg>
+   <div class="pn info">
+    <div class="cat" id="cat"></div>
+    <div class="hint" id="hint"></div>
+    <div id="word"></div>
+   </div>
+  </div>
+  <div id="kb"></div>
+  <div class="row">
+   <button class="btn" id="u-hint">💡 Letra (<span id="n-hint">0</span>)</button>
+   <button class="btn" id="u-elim">🧹 Descartar (<span id="n-elim">0</span>)</button>
+   <button class="btn" id="u-life">❤️ Vida (<span id="n-life">0</span>)</button>
+  </div>
+  <div class="row">
+   <button class="btn ghost" id="b-pause">⏸ Pausa</button>
+   <button class="btn ghost" id="b-restart">🔄 Reiniciar</button>
+   <button class="btn ghost" id="b-shop1">🛒 Tienda</button>
+   <button class="btn ghost" data-go="levels">🏠 Niveles</button>
+  </div>
+ </div>
+</section>
+
+<section class="screen" id="s-shop"><div class="c">
+ <h2>🛒 Tienda</h2>
+ <div class="chip"><i class="coin"></i> <span class="coins">0</span> monedas</div>
+ <div class="shop" id="shopl"></div>
+ <button class="btn" id="b-shopback">⬅ Volver</button>
+</div></section>
+
+<section class="screen" id="s-win"><div class="c">
+ <div class="big-e">🏆</div>
+ <h2 id="w-t">¡Nivel completado!</h2>
+ <p id="w-m" style="max-width:520px"></p>
+ <div class="score" id="w-s">0</div>
+ <div class="row"><button class="btn" id="b-next">Siguiente nivel ➡</button><button class="btn ghost" data-go="levels">Niveles</button><button class="btn ghost" data-go="home">Inicio</button></div>
+</div></section>
+
+<section class="screen" id="s-lose"><div class="c">
+ <div class="big-e">💀</div>
+ <h2>¡Sistema colapsado!</h2>
+ <p>La palabra era: <b id="l-w" style="color:var(--gold)"></b></p>
+ <div>Puntuación</div><div class="score" id="l-s">0</div>
+ <div class="row"><button class="btn" id="b-retry">Volver a intentarlo</button><button class="btn ghost" data-go="levels">Niveles</button></div>
+</div></section>
+
+<div class="ov" id="ov"><h2>⏸ Pausa</h2>
+ <button class="btn" id="b-resume">Continuar</button>
+ <button class="btn ghost" id="b-snd">🔊 Sonido: sí</button>
+ <button class="btn ghost" data-go="levels">Salir al menú</button></div>
+
+<script>
+var LV=[
+{n:"Fácil",e:"🟢",w:[["COMPUTADORA","Hardware","Máquina electrónica que procesa datos y ejecuta programas."],["TECLADO","Hardware","Dispositivo que permite escribir letras y números en una computadora."],["RATÓN","Hardware","Periférico de entrada que mueve el puntero por la pantalla."],["MONITOR","Hardware","Periférico de salida que muestra imágenes y texto."],["INTERNET","Redes","Red mundial que conecta millones de dispositivos."],["ARCHIVO","Datos","Conjunto de información guardada con nombre y extensión."],["CARPETA","Datos","Contenedor que organiza archivos y otras carpetas."],["ESCRITORIO","Software","Pantalla principal de Windows donde aparecen accesos e iconos."]]},
+{n:"Regular",e:"🟣",w:[["HARDWARE","Conceptos","Parte física y tangible de una computadora."],["SOFTWARE","Conceptos","Parte lógica: programas y datos que no se pueden tocar."],["MEMORIA RAM","Hardware","Memoria temporal y rápida donde trabajan los programas abiertos."],["PROCESADOR","Hardware","Cerebro de la computadora que ejecuta las instrucciones."],["IMPRESORA","Hardware","Periférico de salida que pasa el contenido al papel."],["SISTEMA OPERATIVO","Software","Programa que administra recursos y permite usar la computadora."],["ALMACENAMIENTO","Hardware","Unidad donde se guardan datos, como un disco duro."],["EXTENSIÓN","Archivos","Parte final del nombre de un archivo, como .mp3."]]},
+{n:"Difícil",e:"🔴",w:[["PROGRAMACIÓN","Desarrollo","Arte de escribir instrucciones que la computadora puede ejecutar."],["ALGORITMO","Desarrollo","Secuencia ordenada de pasos para resolver un problema."],["CIBERSEGURIDAD","Seguridad","Protección de sistemas y datos frente a ataques digitales."],["BASE DE DATOS","Datos","Colección organizada de información que se consulta y actualiza."],["INTELIGENCIA ARTIFICIAL","Tecnología","Sistemas que imitan capacidades humanas como aprender y razonar."],["REDES INFORMÁTICAS","Redes","Equipos conectados que comparten información y recursos."],["SISTEMA DE ARCHIVOS","Sistemas","Componente del sistema operativo que administra el espacio y acceso a los archivos."],["PERIFÉRICOS","Hardware","Dispositivos externos de entrada o salida conectados a la computadora."]]},
+{n:"Experto",e:"⚡",w:[["CRIPTOGRAFÍA","Seguridad","Técnica que cifra mensajes para que solo el destinatario autorizado los lea."],["COMPILADOR","Desarrollo","Programa que traduce el código fuente a lenguaje de máquina."],["PROTOCOLO","Redes","Conjunto de reglas que permite a dos dispositivos comunicarse."],["CORTAFUEGOS","Seguridad","Barrera que filtra el tráfico de red permitido o bloqueado."],["VIRTUALIZACIÓN","Sistemas","Técnica para ejecutar varios sistemas simulados en un mismo equipo físico."],["DIRECCIÓN IP","Redes","Número que identifica a un dispositivo dentro de una red."],["COMPUTACIÓN EN LA NUBE","Internet","Uso de servidores remotos por internet para guardar y procesar datos."],["APRENDIZAJE AUTOMÁTICO","Inteligencia artificial","Rama de la IA en la que los sistemas aprenden a partir de datos."]]}];
+var SHOP=[
+{id:"hint",i:"💡",n:"Revelar letra",d:"Descubre una letra oculta sin perder vida.",p:15,k:"c"},
+{id:"elim",i:"🧹",n:"Descartar 3 letras",d:"Desactiva 3 letras que no están en la palabra.",p:20,k:"c"},
+{id:"life",i:"❤️",n:"Vida extra",d:"Recupera una vida durante la partida.",p:30,k:"c"},
+{id:"neon",i:"🌸",n:"Diseño Neón",d:"Tema visual rosa y violeta.",p:40,k:"s"},
+{id:"matrix",i:"🟩",n:"Diseño Matrix",d:"Tema visual verde hacker.",p:40,k:"s"}];
+var $=function(i){return document.getElementById(i)};
+var S={coins:0,inv:{hint:0,elim:0,life:0},skins:[],skin:"",unlocked:1,best:0,snd:true};
+try{var sv=JSON.parse(localStorage.getItem("ahorcadoIT"));if(sv)for(var k in sv)S[k]=sv[k]}catch(e){}
+function save(){try{localStorage.setItem("ahorcadoIT",JSON.stringify(S))}catch(e){}}
+var G=null,prev="home",paused=false,AC=null;
+function norm(s){return s.replace(/Ñ/g,"#").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/#/g,"Ñ")}
+function beep(f,d,t,v){if(!S.snd)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.value=v||.08;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+function sfx(k){var m={ok:[[660,.12],[880,.18]],no:[[200,.25,"sawtooth"],[140,.3,"sawtooth"]],coin:[[988,.08],[1319,.2]],win:[[523,.15],[659,.15],[784,.15],[1047,.4]],lose:[[300,.3,"sawtooth"],[220,.3,"sawtooth"],[150,.6,"sawtooth"]],clk:[[500,.05,"square",.04]]}[k];m.forEach(function(n,i){setTimeout(function(){beep(n[0],n[1],n[2],n[3])},i*130)})}
+function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("on")});$("s-"+id).classList.add("on");if(id!=="shop")prev=id;if(id==="levels")buildLevels();if(id==="shop")buildShop();upd()}
+function upd(){document.querySelectorAll(".coins").forEach(function(e){e.textContent=S.coins});$("best").textContent=S.best;["hint","elim","life"].forEach(function(k){$("n-"+k).textContent=S.inv[k]});document.documentElement.setAttribute("data-skin",S.skin||"")}
+function gain(n){S.coins+=n;upd();save();sfx("coin");var c=$("coinchip");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");var f=document.createElement("div");f.className="fl";f.textContent="+"+n+" 🪙";var r=c.getBoundingClientRect();f.style.left=(r.left)+"px";f.style.top=(r.bottom+10)+"px";document.body.appendChild(f);setTimeout(function(){f.remove()},1100)}
+function buildLevels(){var h="";LV.forEach(function(l,i){var lock=i+1>S.unlocked;h+='<button class="btn" data-lv="'+i+'"'+(lock?" disabled":"")+'><span>'+l.e+" Nivel "+(i+1)+": "+l.n+"<br><small>"+(lock?"Completa el nivel anterior":"6 palabras · "+(["fácil","regular","difícil","experto"][i]))+"</small></span><span>"+(lock?"🔒":"▶")+"</span></button>"});$("lv").innerHTML=h;$("lv").querySelectorAll("[data-lv]").forEach(function(b){b.onclick=function(){startLevel(+b.dataset.lv)}})}
+function startLevel(i){var pool=LV[i].w.slice().sort(function(){return Math.random()-.5}).slice(0,6);G={lv:i,q:pool,idx:0,lives:5,errs:0,done:0,score:0,over:false};$("lvname").textContent=LV[i].e+" "+LV[i].n;show("game");nextWord()}
+function nextWord(){var w=G.q[G.idx];G.w=w[0];G.key=norm(w[0]);G.g={};G.used={};G.busy=false;$("cat").textContent="Categoría: "+w[1];$("hint").textContent="Pista: "+w[2];buildKb();draw()}
+function buildKb(){var h="";"ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("").forEach(function(c){h+='<button data-k="'+c+'">'+c+"</button>"});$("kb").innerHTML=h;$("kb").querySelectorAll("button").forEach(function(b){b.onclick=function(){guess(b.dataset.k)}})}
+function draw(){var h="";for(var i=0;i<G.w.length;i++){var ch=G.w[i];if(ch===" ")h+='<span class="l sp"></span>';else h+='<span class="l" data-i="'+i+'">'+(G.g[G.key[i]]?ch:"")+"</span>"}$("word").innerHTML=h;var m=Math.max(5,G.lives),hs="";for(var j=0;j<m;j++)hs+=j<G.lives?"❤️":"🖤";$("hearts").textContent=hs;$("ok").textContent=G.done;$("errs").textContent=G.errs;$("prog").style.width=(G.done/6*100)+"%";var st=Math.min(5,Math.max(0,5-G.lives));var sv=$("hang");sv.classList.toggle("dead",st>=5);for(var p=1;p<=5;p++){var e=sv.querySelector(".p"+p);e.classList.toggle("s",st>=p)}upd()}
+function solved(){for(var i=0;i<G.key.length;i++)if(G.key[i]!==" "&&!G.g[G.key[i]])return false;return true}
+function mark(c,cls){var b=$("kb").querySelector('[data-k="'+c+'"]');if(b){b.classList.add(cls);b.disabled=true}}
+function guess(c){if(!G||G.over||G.busy||paused||G.used[c])return;G.used[c]=1;if(G.key.indexOf(c)>-1){G.g[c]=1;mark(c,"ok");sfx("ok");draw();document.querySelectorAll("#word .l").forEach(function(e){if(e.dataset.i&&G.key[e.dataset.i]===c)e.classList.add("pop")});if(solved())wordDone()}else{mark(c,"no");sfx("no");G.lives--;G.errs++;var s=$("s-game");s.classList.remove("shake");void s.offsetWidth;s.classList.add("shake");draw();if(G.lives<=0)lose()}}
+function wordDone(){G.busy=true;G.done++;G.score+=100;gain(10);draw();setTimeout(function(){if(G.done>=6)win();else{G.idx++;nextWord()}},900)}
+function conf(){var cs=["#2b6bff","#8a3ffc","#5ce1ff","#ffd54a","#3dffb0"];for(var i=0;i<70;i++){var d=document.createElement("div");d.className="cf";d.style.left=Math.random()*100+"vw";d.style.background=cs[i%5];d.style.animationDuration=(2+Math.random()*2.5)+"s";document.body.appendChild(d);(function(x){setTimeout(function(){x.remove()},4800)})(d)}}
+function win(){G.over=true;G.score+=G.lives*20;if(G.lv+2>S.unlocked&&G.lv<3)S.unlocked=G.lv+2;if(G.score>S.best)S.best=G.score;save();var M=["¡Excelente inicio! Ya dominas lo básico de la computación.","¡Gran trabajo! Tu conocimiento informático sube de nivel.","¡Impresionante! Ya piensas como un verdadero programador.","¡Eres un verdadero experto en informática! Misión cumplida."];$("w-t").textContent=G.lv==3?"¡Juego completado!":"¡Nivel "+(G.lv+1)+" completado!";$("w-m").textContent=M[G.lv];$("w-s").textContent=G.score+" pts";$("b-next").style.display=G.lv<3?"":"none";show("win");sfx("win");conf()}
+function lose(){G.over=true;if(G.score>S.best){S.best=G.score;save()}$("l-w").textContent=G.w;$("l-s").textContent=G.score+" pts";$("hang").classList.add("dead");setTimeout(function(){show("lose");sfx("lose")},900)}
+function use(k){if(!G||G.over||G.busy||paused)return;if(S.inv[k]<1){alert("No tienes este objeto. ¡Cómpralo en la tienda!");return}
+ if(k==="hint"){var r=G.key.split("").filter(function(c){return c!==" "&&!G.g[c]});if(!r.length)return;var c=r[Math.floor(Math.random()*r.length)];S.inv.hint--;G.used[c]=1;G.g[c]=1;mark(c,"ok");sfx("ok");draw();if(solved())wordDone()}
+ if(k==="elim"){var o=[];$("kb").querySelectorAll("button:not(:disabled)").forEach(function(b){if(G.key.indexOf(b.dataset.k)<0)o.push(b)});if(o.length<1)return;o.sort(function(){return Math.random()-.5}).slice(0,3).forEach(function(b){G.used[b.dataset.k]=1;b.disabled=true;b.classList.add("out")});S.inv.elim--;sfx("clk")}
+ if(k==="life"){S.inv.life--;G.lives++;sfx("coin");draw()}
+ save();upd()}
+function buildShop(){var h="";SHOP.forEach(function(it){var own=it.k==="s"&&S.skins.indexOf(it.id)>-1,on=S.skin===it.id;var lab=it.k==="s"?(own?(on?"✔ Activo":"Activar"):it.p+" 🪙"):it.p+" 🪙 (tienes "+S.inv[it.id]+")";h+='<div class="pn it"><div><b>'+it.i+" "+it.n+"</b><span>"+it.d+'</span></div><button class="btn" data-b="'+it.id+'"'+((!own&&S.coins<it.p)?" disabled":"")+">"+lab+"</button></div>"});h+='<div class="pn it"><div><b>🎨 Diseño clásico</b><span>Vuelve al azul eléctrico original.</span></div><button class="btn ghost" data-b="classic">'+(S.skin?"Activar":"✔ Activo")+"</button></div>";$("shopl").innerHTML=h;$("shopl").querySelectorAll("[data-b]").forEach(function(b){b.onclick=function(){buy(b.dataset.b)}})}
+function buy(id){if(id==="classic"){S.skin=""}else{var it=SHOP.filter(function(x){return x.id===id})[0];if(it.k==="c"){if(S.coins<it.p)return;S.coins-=it.p;S.inv[id]++;sfx("coin")}else if(S.skins.indexOf(id)>-1)S.skin=id;else{if(S.coins<it.p)return;S.coins-=it.p;S.skins.push(id);S.skin=id;sfx("coin")}}save();upd();buildShop()}
+function openShop(){show("shop")}
+function pause(p){paused=p;$("ov").classList.toggle("on",p)}
+$("b-start").onclick=function(){sfx("clk");show("levels")};
+$("b-shop0").onclick=openShop;$("b-shop1").onclick=openShop;$("b-shopback").onclick=function(){show(prev==="shop"?"home":prev)};
+$("b-pause").onclick=function(){pause(true)};$("b-resume").onclick=function(){pause(false)};
+$("b-snd").onclick=function(){S.snd=!S.snd;this.textContent="🔊 Sonido: "+(S.snd?"sí":"no");save()};
+$("b-restart").onclick=function(){if(G)startLevel(G.lv)};$("b-retry").onclick=function(){startLevel(G.lv)};
+$("b-next").onclick=function(){startLevel(G.lv+1)};
+$("u-hint").onclick=function(){use("hint")};$("u-elim").onclick=function(){use("elim")};$("u-life").onclick=function(){use("life")};
+document.querySelectorAll("[data-go]").forEach(function(b){b.onclick=function(){pause(false);show(b.dataset.go)}});
+document.addEventListener("keydown",function(e){if(!$("s-game").classList.contains("on"))return;if(e.key==="Escape"){pause(!paused);return}if(e.ctrlKey||e.metaKey||e.altKey)return;var c=e.key.toUpperCase();if(/^[A-ZÑ]$/.test(c))guess(c)});
+/* fondo animado: código binario + partículas */
+(function(){var cv=$("bg"),x=cv.getContext("2d"),W,H,cols,dr=[],pt=[];function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;cols=Math.ceil(W/22);dr=[];for(var i=0;i<cols;i++)dr[i]=Math.random()*H/20;pt=[];for(var j=0;j<40;j++)pt.push({x:Math.random()*W,y:Math.random()*H,v:.2+Math.random()*.6})}rs();addEventListener("resize",rs);
+function f(){x.fillStyle="rgba(5,6,15,.12)";x.fillRect(0,0,W,H);x.font="16px monospace";var cs=getComputedStyle(document.documentElement);for(var i=0;i<cols;i++){x.fillStyle=i%5?cs.getPropertyValue("--a").trim():cs.getPropertyValue("--c").trim();x.globalAlpha=.55;x.fillText(Math.random()>.5?"1":"0",i*22,dr[i]*20);x.globalAlpha=1;if(dr[i]*20>H&&Math.random()>.975)dr[i]=0;dr[i]+=.5}
+x.fillStyle=cs.getPropertyValue("--b").trim();pt.forEach(function(p){p.y-=p.v;if(p.y<0)p.y=H;x.beginPath();x.arc(p.x,p.y,2,0,7);x.fill()});requestAnimationFrame(f)}f()})();
+upd();
+</script>
+</body>
+</html>
